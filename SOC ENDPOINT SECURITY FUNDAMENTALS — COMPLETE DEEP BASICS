@@ -1,0 +1,211 @@
+# 🧪 SOC ENDPOINT SECURITY FUNDAMENTALS — COMPLETE DEEP BASICS (WHY • WHAT • WHERE • HOW)
+
+> **Audience:** SOC L1–L2 (Defensive)
+>
+> **Goal:** Enable analysts to correctly interpret endpoint alerts, understand attacker behavior, and take the right response action
+>
+> **Core Truth:** Endpoint alerts are evidence — not verdicts
+
+---
+
+## 🛡️ 1️⃣ ANTIVIRUS vs EDR vs MDR vs XDR (REAL SOC VIEW)
+
+### 🔹 WHAT THEY ARE
+
+| Technology     | What It Actually Does            | SOC Reality                     |
+| -------------- | -------------------------------- | ------------------------------- |
+| Antivirus (AV) | Signature + basic heuristics     | Stops known malware only        |
+| EDR            | Behavioral telemetry + response  | Primary investigation tool      |
+| MDR            | EDR + human monitoring           | Outsourced detection & response |
+| XDR            | Correlates endpoint + other logs | Detection enrichment layer      |
+
+### 🔹 WHY SOC CARES
+
+Misunderstanding leads to:
+
+* Assuming protection exists when it doesn’t
+* Ignoring high‑value alerts
+
+---
+
+## 🚦 2️⃣ DETECTION vs PREVENTION
+
+### 🔹 DETECTION
+
+Identifies suspicious or malicious behavior
+
+Examples
+
+* Encoded PowerShell
+* LSASS access attempt
+
+### 🔹 PREVENTION
+
+Stops execution or blocks behavior
+
+Examples
+
+* Malware execution blocked
+* Script terminated
+
+### 🔹 SOC RULE
+
+> A blocked attack is still an **attack attempt**
+
+Detection without prevention = visibility
+Prevention without detection = blind confidence
+
+---
+
+## 🔒 3️⃣ QUARANTINE vs CONTAINMENT vs ISOLATION
+
+### 🔹 QUARANTINE (FILE LEVEL)
+
+* Removes file access
+* File moved to secure location
+
+### 🔹 CONTAINMENT (PROCESS / BEHAVIOR)
+
+* Stops execution or persistence
+* Limits attacker actions
+
+### 🔹 ISOLATION (NETWORK LEVEL)
+
+* Endpoint cut off from network
+* Used during active compromise
+
+### 🔹 WHEN TO ISOLATE
+
+* Credential theft detected
+* Lateral movement observed
+
+---
+
+## 🧨 4️⃣ ENDPOINT ATTACK TECHNIQUES (DEFENSIVE VIEW)
+
+| Technique          | What Attacker Does | SOC Signal         |
+| ------------------ | ------------------ | ------------------ |
+| Initial execution  | User runs payload  | Office → shell     |
+| LOLBins abuse      | Native tools       | powershell.exe     |
+| Credential dumping | Steal creds        | LSASS access       |
+| Persistence        | Maintain access    | Startup / registry |
+| Lateral movement   | Move internally    | PsExec / RDP       |
+
+---
+
+## 🚨 5️⃣ EDR ALERTS — HOW TO READ THEM
+
+### 🔹 WHAT EDR SHOWS
+
+* Process tree
+* Command line
+* Parent‑child relationships
+* Network connections
+
+### 🔹 SAMPLE ALERT
+
+```
+ParentProcess: winword.exe
+ChildProcess: powershell.exe
+CommandLine: powershell -enc SQBFAFgA
+```
+
+### 🔹 SOC QUESTIONS
+
+* User‑initiated or automated?
+* Encoded or obfuscated?
+* Known admin activity?
+
+---
+
+## 🧠 6️⃣ CONTEXTUAL ANALYSIS (MISSING AREA)
+
+### 🔹 CONTEXT INCLUDES
+
+* User role
+* Device role
+* Time of activity
+* Network destination
+
+### 🔹 WHY IT MATTERS
+
+Same alert can be:
+
+* Benign on IT admin system
+* Critical on finance user laptop
+
+---
+
+## 🔁 7️⃣ FALSE POSITIVES IN ENDPOINT SECURITY (MISSING AREA)
+
+### 🔹 COMMON SOURCES
+
+* IT scripts
+* Backup agents
+* Patch management tools
+
+### 🔹 HOW TO VALIDATE
+
+* Check file signer
+* Verify command purpose
+
+---
+
+## 🧾 8️⃣ ENDPOINT LOGS & TELEMETRY (MISSING AREA)
+
+### 🔹 WINDOWS
+
+| Log        | Path                    |
+| ---------- | ----------------------- |
+| Security   | Event Viewer → Security |
+| PowerShell | Event ID 4104           |
+| Sysmon     | Event ID 1, 3, 7        |
+
+### 🔹 LINUX
+
+```
+/var/log/syslog
+/var/log/auth.log
+```
+
+---
+
+## 🧪 9️⃣ EVIDENCE COLLECTION FROM ENDPOINTS
+
+### 🔹 WHAT TO COLLECT
+
+* Process tree screenshot
+* File hash
+* Command line
+* Network connections
+
+### 🔹 WHY SOC CARES
+
+Evidence supports:
+
+* Escalation
+* Containment
+* Legal review
+
+---
+
+## 🔄 🔟 ENDPOINT → NETWORK → IDENTITY CORRELATION (MISSING AREA)
+
+### 🔹 EXAMPLE
+
+```
+EDR alert → VPN login → AD privilege change
+```
+
+Single alert = weak signal
+Correlated = confirmed attack
+
+---
+
+## 🧠 FINAL SOC RULE
+
+> **Endpoints show the attacker’s hands — not their full plan**
+
+Correlation reveals intent
+
+
