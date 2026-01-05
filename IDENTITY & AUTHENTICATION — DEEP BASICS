@@ -1,0 +1,280 @@
+# 👤 SOC IDENTITY & AUTHENTICATION — DEEP BASICS (WHY • WHAT • WHERE • HOW)
+
+> **Audience:** SOC L1–L2 (Defensive)
+>
+> **Goal:** Understand identity events the way attackers and SOC analysts see them
+>
+> **Core Truth:** Most modern breaches start with **identity abuse**, not malware
+
+---
+
+## 🔑 1️⃣ AUTHENTICATION vs AUTHORIZATION
+
+### 🔹 WHAT
+
+* **Authentication** → Who are you?
+* **Authorization** → What are you allowed to do?
+
+### 🔹 WHY SOC CARES
+
+Because **successful authentication does NOT mean legitimate access**
+
+Attackers often:
+
+* Authenticate legitimately (stolen creds)
+* Abuse authorization (excessive permissions)
+
+### 🔹 WHERE TO SEE THIS
+
+**Windows Security Logs**
+
+* Auth → Event ID **4624 / 4625**
+* AuthZ → Group membership, token privileges
+
+**Cloud IdP**
+
+* Sign-in success
+* Role assignment logs
+
+### 🔹 SAMPLE LOG
+
+```
+EventID=4624
+User=gagan
+LogonType=10
+AuthPackage=Negotiate
+```
+
+SOC thinking
+
+* Success ≠ safe
+* Why LogonType 10 (RDP)?
+
+---
+
+## 🏢 2️⃣ ACTIVE DIRECTORY — DEEP FUNDAMENTALS
+
+### 🔹 WHAT AD REALLY IS
+
+A **centralized identity + trust database**
+
+Stores
+
+* Users
+* Groups
+* Computers
+* Trusts
+* Policies
+
+### 🔹 WHY ATTACKERS TARGET AD
+
+* One account → many systems
+* Privilege escalation paths
+
+### 🔹 CORE COMPONENTS SOC MUST KNOW
+
+| Component | Purpose           | Abuse       |
+| --------- | ----------------- | ----------- |
+| DC        | Auth authority    | DCSync      |
+| LDAP      | Directory queries | Recon       |
+| GPO       | Policy control    | Persistence |
+
+### 🔹 WHERE TO LOOK
+
+**AD Logs (DC)**
+
+```
+Windows Logs → Security
+```
+
+Important Event IDs
+
+* 4624 / 4625 → Logon
+* 4672 → Privileged logon
+* 4728 → Added to group
+* 4768 / 4769 → Kerberos
+
+---
+
+## 🎫 3️⃣ KERBEROS vs NTLM
+
+### 🔹 WHAT
+
+* **Kerberos** → Ticket-based (modern)
+* **NTLM** → Challenge-response (legacy)
+
+### 🔹 WHY SOC CARES
+
+NTLM usage today often means:
+
+* Legacy system
+* Misconfiguration
+* Relay attacks
+
+### 🔹 ATTACKER ABUSE
+
+* Kerberoasting
+* NTLM relay
+
+### 🔹 WHERE TO SEE
+
+**Kerberos Events**
+
+* 4768 → TGT request
+* 4769 → Service ticket
+
+**NTLM**
+
+* Event ID 4776
+
+### 🔹 SAMPLE
+
+```
+4769 ServiceName=HTTP/webserver
+```
+
+SOC thought
+
+* Why requesting many tickets?
+
+---
+
+## 🔐 4️⃣ MFA TYPES & FAILURES
+
+### 🔹 MFA TYPES
+
+* SMS OTP
+* App-based push
+* Hardware token
+* Biometrics
+
+### 🔹 WHY SOC CARES
+
+MFA failure patterns reveal attacks
+
+### 🔹 ATTACK TECHNIQUES
+
+* MFA fatigue
+* OTP phishing
+* Push bombing
+
+### 🔹 WHERE TO LOOK
+
+**Cloud IdP Logs**
+
+* MFA challenge
+* MFA result
+
+### 🔹 SAMPLE
+
+```
+MFAResult=Denied
+Reason=User rejected
+```
+
+SOC thinking
+
+* How many rejects?
+* Time window?
+
+---
+
+## ☁️ 5️⃣ CLOUD IDENTITY — IdP & SSO
+
+### 🔹 WHAT
+
+Identity Provider authenticates users once
+SSO grants access to many apps
+
+Examples
+
+* Azure AD
+* Okta
+* Google Workspace
+
+### 🔹 WHY SOC CARES
+
+* Cloud identity = primary perimeter
+* No network boundary
+
+### 🔹 WHERE TO LOOK
+
+**IdP Logs**
+
+* Sign-in logs
+* Token issuance
+* Conditional access
+
+### 🔹 SAMPLE
+
+```
+User=gagan
+App=Salesforce
+Result=Success
+IP=185.x.x.x
+```
+
+SOC question
+
+* Known IP?
+* Risk flagged?
+
+---
+
+## 👑 6️⃣ PRIVILEGED ACCESS
+
+### 🔹 WHAT
+
+Accounts with elevated rights
+
+Examples
+
+* Domain Admin
+* Global Admin
+* Root
+
+### 🔹 WHY SOC CARES
+
+One privileged account = full compromise
+
+### 🔹 RED FLAGS
+
+* Privileged login from workstation
+* Privilege escalation after hours
+
+### 🔹 LOGS
+
+* Event ID 4672
+* Role assignment logs
+
+---
+
+## 🚨 7️⃣ IDENTITY LOGS & ABUSE PATTERNS
+
+### 🔹 COMMON ABUSE PATTERNS
+
+| Pattern                 | Meaning          |
+| ----------------------- | ---------------- |
+| Many failures → success | Password spray   |
+| New country login       | Account takeover |
+| MFA bypass              | Token theft      |
+| Service account login   | Lateral movement |
+
+### 🔹 CORRELATION IDEA
+
+```
+Failed logins → VPN success → Admin group add
+```
+
+---
+
+## 🧠 FINAL SOC RULE
+
+> **Identity alerts are never isolated**
+>
+> Always correlate with
+
+* Network
+* Endpoint
+* Time
+
