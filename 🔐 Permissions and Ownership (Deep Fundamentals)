@@ -1,0 +1,190 @@
+# 🔐 Permissions and Ownership (Deep Fundamentals)
+
+---
+
+## 🔹 What
+
+**Permissions** define:
+
+* Who can **read, write, execute, or modify** a resource
+
+**Ownership** defines:
+
+* Who controls the permissions of that resource
+
+They apply to:
+
+* Files and folders
+* Services
+* Processes
+* Registry keys (Windows)
+
+Permissions are a **core security boundary** in any OS.
+
+---
+
+## 🔹 Where to check
+
+* Files and folders (system + user paths)
+* Executables and scripts
+* Services and startup items
+* Scheduled tasks
+* Registry keys (Windows)
+
+---
+
+## 🔹 How to check
+
+### Windows
+
+Check file or folder permissions:
+
+```cmd
+icacls file.exe
+```
+
+GUI:
+
+* Right-click → Properties → Security → Advanced
+
+Check service permissions:
+
+```cmd
+sc qc <service_name>
+```
+
+---
+
+### Linux
+
+Check permissions and ownership:
+
+```bash
+ls -l file
+stat file
+```
+
+Example output:
+
+```
+-rwxr-xr-- 1 root root script.sh
+```
+
+---
+
+## 🔹 Why SOC checks this
+
+* **Weak permissions = privilege escalation**
+* Writable system files allow malware replacement
+* Attackers abuse permissions for:
+
+  * Persistence
+  * Lateral movement
+  * Defense evasion
+
+Many real-world attacks succeed **without exploits**, purely due to misconfigured permissions.
+
+---
+
+## 🔹 Common high-risk permission patterns
+
+* World-writable executables
+* User-writable system directories
+* Services running as SYSTEM/root with writable binaries
+* Registry keys writable by non-admin users
+
+---
+
+## 🔹 Critical paths SOC checks
+
+### Windows
+
+```
+C:\Windows\
+C:\Windows\System32\
+C:\ProgramData\
+C:\Users\<user>\AppData\
+```
+
+### Linux
+
+```
+/etc/
+/usr/bin/
+/usr/local/bin/
+/tmp/
+/var/tmp/
+```
+
+---
+
+## 🔹 How attackers abuse permissions
+
+* Replace legitimate binaries with malicious ones
+* Modify service executables
+* Drop payloads in writable system paths
+* Abuse SUID/SGID binaries (Linux)
+
+---
+
+## 🔹 Sample logs
+
+### Windows
+
+**Event ID 4670 – Permissions changed**
+
+```
+Permissions on an object were changed
+Object Name: C:\ProgramData\service.exe
+```
+
+**Event ID 4663 – Object access**
+
+```
+An attempt was made to access an object
+Access Mask: WriteData
+```
+
+---
+
+### Linux
+
+From auditd or system logs:
+
+```
+chmod changed on /usr/bin/backup.sh
+chown root:root /tmp/malware
+```
+
+---
+
+## 🔹 What looks suspicious (SOC signals)
+
+* Executables writable by normal users
+* Permission changes shortly before an alert
+* SYSTEM/root services pointing to user-writable paths
+* Ownership changes on system files
+
+---
+
+## 🔹 3rd-party applications SOC uses
+
+* **EDR platforms** (permission & behavior monitoring)
+* **OSQuery**
+* **Auditd** (Linux)
+* **Sysinternals Autoruns**
+* **SIEM** (correlating permission changes)
+
+---
+
+## 🧠 SOC Mindset
+
+If you see:
+
+* A service running as SYSTEM
+* And its binary is writable by a user
+
+➡️ You don’t need malware — **you already have compromise**
+
+Permissions are often the **silent root cause** of major incidents.
+
