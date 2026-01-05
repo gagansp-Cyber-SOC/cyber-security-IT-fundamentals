@@ -1,0 +1,249 @@
+
+
+---
+
+# Windows vs Linux vs macOS 
+
+---
+
+## 🪟 Windows
+
+### 🔹 What
+
+Windows is the most widely used OS in **enterprise environments**, especially for:
+
+* User endpoints
+* Active Directory
+* File and application servers
+
+---
+
+### 🔹 Where to check
+
+* User workstations
+* Domain controllers
+* Application servers
+
+---
+
+### 🔹 How to check
+
+```cmd
+winver
+systeminfo
+```
+
+---
+
+### 🔹 Why SOC checks Windows
+
+* Primary target for malware and ransomware
+* Deep integration with Active Directory
+* Rich logging (Event IDs)
+
+---
+
+### 🔹 Important paths
+
+```
+C:\Windows\System32\
+C:\Users\
+C:\ProgramData\
+```
+
+---
+
+### 🔹 Sample logs
+
+**Security Event Log**
+
+```
+Event ID 4624 – Successful logon
+Event ID 4625 – Failed logon
+Event ID 4688 – Process creation
+```
+
+---
+
+### 🔹 Common attack focus
+
+* LSASS dumping
+* Registry persistence
+* PowerShell abuse
+
+---
+
+### 🔹 3rd-party applications
+
+* EDR tools (CrowdStrike, Defender, SentinelOne)
+* Sysinternals (Process Explorer, Autoruns)
+* SIEM agents
+
+---
+
+## 🐧 Linux
+
+### 🔹 What
+
+Linux is dominant in:
+
+* Servers
+* Cloud infrastructure
+* Containers
+
+---
+
+### 🔹 Where to check
+
+* Web servers
+* Database servers
+* Cloud VMs
+
+---
+
+### 🔹 How to check
+
+```bash
+uname -a
+cat /etc/os-release
+```
+
+---
+
+### 🔹 Why SOC checks Linux
+
+* SSH brute force is very common
+* Often internet-facing
+* Less default logging than Windows
+
+---
+
+### 🔹 Important paths
+
+```
+/etc/
+/var/log/
+/home/
+/tmp/
+/usr/bin/
+```
+
+---
+
+### 🔹 Sample logs
+
+```
+/var/log/auth.log   (Debian/Ubuntu)
+Failed password for user root
+```
+
+```
+/var/log/secure     (RHEL/CentOS)
+```
+
+---
+
+### 🔹 Common attack focus
+
+* SSH key abuse
+* Cron persistence
+* Crypto miners
+
+---
+
+### 🔹 3rd-party applications
+
+* Auditd
+* OSQuery
+* Falco
+* Cloud monitoring agents
+
+---
+
+## 🍎 macOS
+
+### 🔹 What
+
+macOS is mainly used for:
+
+* Developer machines
+* Corporate laptops
+
+---
+
+### 🔹 Where to check
+
+* Employee endpoints
+* Developer systems
+
+---
+
+### 🔹 How to check
+
+```bash
+sw_vers
+```
+
+---
+
+### 🔹 Why SOC checks macOS
+
+* Increasing phishing and malware
+* Often overlooked in security coverage
+
+---
+
+### 🔹 Important paths
+
+```
+/Applications/
+/Users/
+/Library/
+/System/Library/
+```
+
+---
+
+### 🔹 Sample logs
+
+```bash
+log show --predicate 'eventMessage contains "authentication"' --last 1d
+```
+
+---
+
+### 🔹 Common attack focus
+
+* LaunchAgents persistence
+* Browser credential theft
+
+---
+
+### 🔹 3rd-party applications
+
+* Jamf
+* EDR agents
+* OSQuery
+
+---
+
+## 🔍 Quick SOC Comparison Table
+
+| Area             | Windows           | Linux       | macOS                 |
+| ---------------- | ----------------- | ----------- | --------------------- |
+| Enterprise usage | Very High         | High        | Medium                |
+| Logging          | Very rich         | Moderate    | Moderate              |
+| Common attacks   | Malware, AD abuse | SSH, miners | Phishing, persistence |
+| SOC priority     | Highest           | High        | Medium                |
+
+---
+
+## 🧠 SOC Mindset
+
+If you know:
+
+* OS type
+* Log locations
+* Common attack paths
+
+You can **triage alerts faster and smarter**, regardless of tools.
