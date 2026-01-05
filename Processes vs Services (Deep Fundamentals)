@@ -1,0 +1,231 @@
+
+
+# 🔄 Processes vs Services (Deep Fundamentals – SOC View)
+
+---
+
+## 🔹 What is a Process
+
+### ✅ What
+
+A **process** is a running instance of a program.
+
+* Starts when an application is launched
+* Ends when the application closes
+* Usually runs under a user context
+
+Examples:
+
+* `chrome.exe`
+* `powershell.exe`
+* `python`
+
+---
+
+### 📍 Where to check
+
+* Endpoints
+* Servers
+* Suspicious alerts involving execution
+
+---
+
+### 🔍 How to check
+
+**Windows**
+
+```cmd
+tasklist
+```
+
+Task Manager → Processes / Details
+
+**Linux**
+
+```bash
+ps aux
+top
+```
+
+---
+
+### ❓ Why SOC checks processes
+
+* Malware runs as a process
+* Initial compromise usually appears here
+* Process name, parent, and path reveal intent
+
+---
+
+### 📁 Common process paths
+
+**Windows**
+
+```
+C:\Windows\System32\
+C:\Program Files\
+C:\Users\<user>\AppData\
+```
+
+**Linux**
+
+```
+/usr/bin/
+/usr/local/bin/
+/tmp/
+/home/<user>/
+```
+
+---
+
+### 📄 Sample log (Process creation)
+
+**Windows – Event ID 4688**
+
+```
+A new process has been created
+Process Name: C:\Users\user\AppData\evil.exe
+Parent Process: winword.exe
+```
+
+---
+
+### 🧰 3rd-party tools
+
+* EDR platforms
+* Sysinternals Process Explorer
+* OSQuery
+
+---
+
+## 🔹 What is a Service
+
+### ⚙️ What
+
+A **service** is a background process that:
+
+* Starts automatically
+* Runs without user interaction
+* Often runs with high privileges
+
+Examples:
+
+* Windows Update
+* Database services
+* Web servers
+
+---
+
+### 📍 Where to check
+
+* Startup behavior
+* Persistence mechanisms
+* Server workloads
+
+---
+
+### 🔍 How to check
+
+**Windows**
+
+```cmd
+services.msc
+sc query
+```
+
+**Linux**
+
+```bash
+systemctl list-units --type=service
+```
+
+---
+
+### ❓ Why SOC checks services
+
+* Malware uses services for persistence
+* Services often run as SYSTEM/root
+* Harder to notice than normal apps
+
+---
+
+### 📁 Common service paths
+
+**Windows**
+
+```
+C:\Windows\System32\services.exe
+HKLM\SYSTEM\CurrentControlSet\Services
+```
+
+**Linux**
+
+```
+/etc/systemd/system/
+/lib/systemd/system/
+```
+
+---
+
+### 📄 Sample logs
+
+**Windows – Service install**
+
+```
+Event ID 7045
+A service was installed in the system
+Service Name: WindowsUpdateHelper
+```
+
+**Linux**
+
+```
+systemd: Started suspicious.service
+```
+
+---
+
+### 🧰 3rd-party tools
+
+* Autoruns (Sysinternals)
+* EDR persistence view
+* OSQuery
+
+---
+
+## 🔁 Process vs Service (SOC Comparison)
+
+| Area        | Process     | Service        |
+| ----------- | ----------- | -------------- |
+| Trigger     | User action | System startup |
+| Visibility  | High        | Low            |
+| Persistence | No          | Yes            |
+| Privilege   | User-level  | SYSTEM/root    |
+| SOC Risk    | Medium      | High           |
+
+---
+
+## 🧠 SOC Mindset (Very Important)
+
+Most attacks follow this flow:
+
+1. Initial execution → **Process**
+2. Privilege escalation
+3. Persistence → **Service**
+
+If you see:
+
+* Unknown service names
+* Services pointing to user folders
+* Services created recently
+
+➡️ Treat as **high-risk persistence**
+
+---
+
+## 📌 Real-world red flags
+
+* Service binary in `AppData`
+* Service name mimicking Windows
+* Service created outside patch windows
+
