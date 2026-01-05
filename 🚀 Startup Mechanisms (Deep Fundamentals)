@@ -1,0 +1,293 @@
+
+# 🚀 Startup Mechanisms (Deep Fundamentals)
+
+---
+
+## 🔹 What
+
+Startup mechanisms are **methods used by the operating system to automatically execute programs** when:
+
+* The system boots
+* A user logs in
+* A scheduled trigger occurs
+
+They are used for:
+
+* Legitimate system and application startup
+* **Malware persistence** (very common)
+
+Startup mechanisms exist across:
+
+* Registry
+* Services
+* Startup folders
+* Scheduled tasks
+* WMI
+* Init/systemd (Linux)
+
+---
+
+## 🔹 Where to check
+
+* System boot sequence
+* User logon events
+* Auto-start locations
+* Task Scheduler
+* Service configuration
+* WMI subscriptions
+
+---
+
+## 🔹 How to check
+
+### Windows (Built-in)
+
+Startup overview:
+
+* Task Manager → Startup tab
+* `msconfig`
+
+Command line:
+
+```cmd
+wmic startup get caption,command
+```
+
+Services:
+
+```cmd
+services.msc
+sc query
+```
+
+Scheduled tasks:
+
+```cmd
+schtasks /query /fo LIST /v
+```
+
+---
+
+### Linux
+
+Startup services:
+
+```bash
+systemctl list-unit-files
+systemctl list-units --type=service
+```
+
+Cron jobs:
+
+```bash
+crontab -l
+ls /etc/cron*
+```
+
+---
+
+## 🔹 Why SOC checks this
+
+* Most malware **survives reboot** using startup mechanisms
+* Persistence often exists even after malware removal
+* Startup abuse does **not always drop new binaries**
+* Attackers blend into legitimate startup noise
+
+If persistence is missed, incidents **reoccur**.
+
+---
+
+## 🔹 Core Startup Mechanisms (Windows)
+
+### 1️⃣ Registry Auto-Runs
+
+```
+HKLM\Software\Microsoft\Windows\CurrentVersion\Run
+HKCU\Software\Microsoft\Windows\CurrentVersion\Run
+HKCU\Software\Microsoft\Windows\CurrentVersion\RunOnce
+```
+
+Used for:
+
+* Auto-start on boot or login
+
+Abuse:
+
+* Malware adds hidden executables
+
+---
+
+### 2️⃣ Startup Folders
+
+**User Startup**
+
+```
+C:\Users\<user>\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
+```
+
+**System Startup**
+
+```
+C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup
+```
+
+Abuse:
+
+* Dropping shortcuts or scripts
+
+---
+
+### 3️⃣ Services
+
+Service registry path:
+
+```
+HKLM\SYSTEM\CurrentControlSet\Services
+```
+
+Service binaries:
+
+```
+C:\Windows\System32\
+C:\ProgramData\
+```
+
+Abuse:
+
+* Malicious service running as SYSTEM
+
+---
+
+### 4️⃣ Scheduled Tasks
+
+Storage:
+
+```
+C:\Windows\System32\Tasks
+```
+
+Common abuse:
+
+* Run at logon
+* Run every few minutes
+* Hidden task names
+
+---
+
+### 5️⃣ WMI Persistence (Advanced)
+
+Used for:
+
+* Stealthy persistence
+* Triggered by events
+
+Very hard to detect without tooling
+
+---
+
+## 🔹 Core Startup Mechanisms (Linux)
+
+### systemd Services
+
+```
+/etc/systemd/system/
+/lib/systemd/system/
+```
+
+### Cron Jobs
+
+```
+/etc/crontab
+/etc/cron.daily/
+/var/spool/cron/
+```
+
+### Legacy Init Scripts
+
+```
+/etc/init.d/
+```
+
+Abuse:
+
+* Scheduled execution
+* Silent background persistence
+
+---
+
+## 🔹 How attackers abuse startup mechanisms
+
+* Name malware similar to system files
+* Place binaries in trusted locations
+* Use delayed execution to evade detection
+* Abuse SYSTEM/root context
+
+Most ransomware and backdoors use **at least one startup method**.
+
+---
+
+## 🔹 Sample logs
+
+### Windows
+
+**Event ID 7045 – Service installed**
+
+```
+A service was installed in the system
+Service Name: WindowsUpdateHelper
+Binary Path: C:\ProgramData\updater.exe
+```
+
+**Event ID 4698 – Scheduled task created**
+
+```
+A scheduled task was created
+Task Name: \SystemUpdate
+```
+
+---
+
+### Linux
+
+From logs:
+
+```
+cron: (root) CMD (/tmp/update.sh)
+systemd: Started suspicious.service
+```
+
+---
+
+## 🔹 What looks suspicious (SOC signals)
+
+* Startup items pointing to user-writable paths
+* Random or system-like names
+* Startup entries created outside maintenance windows
+* Multiple persistence methods on same host
+* Startup item without matching software installation
+
+---
+
+## 🔹 3rd-party applications SOC uses
+
+* **Sysinternals Autoruns** (best all-in-one)
+* **EDR platforms** (persistence alerts)
+* **OSQuery**
+* **SIEM** (Event ID correlation)
+
+---
+
+## 🧠 SOC Mindset
+
+If malware comes back after reboot:
+➡️ **Startup mechanism was missed**
+
+Always ask:
+
+* How does it start
+* Under which user
+* With what privilege
+* From which path
+
+Startup mechanisms are the **backbone of persistence**.
+
