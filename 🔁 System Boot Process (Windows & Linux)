@@ -1,0 +1,345 @@
+# 🔁 System Boot Process (Windows & Linux)
+
+## 🔹 What
+
+The boot process is the sequence from **power on → OS loaded**
+It initializes firmware, loads the bootloader, kernel, drivers, and startup services
+
+Attackers target this stage to gain **early, stealthy persistence**
+
+---
+
+## 📍 Where to check
+
+* Startup configuration
+* Bootloaders
+* Drivers loaded at boot
+* Startup services
+
+---
+
+## 🔍 How to check
+
+### Windows
+
+```cmd
+bcdedit
+msconfig
+```
+
+Event Viewer
+
+* System logs
+
+### Linux
+
+```bash
+dmesg
+journalctl -b
+```
+
+---
+
+## ❓ Why SOC checks
+
+* Bootkits run **before security tools**
+* Kernel drivers load during boot
+* Persistence that survives reboot
+
+---
+
+## 📁 Important paths
+
+**Windows**
+
+```
+C:\Windows\System32\
+C:\Windows\System32\drivers\
+```
+
+**Linux**
+
+```
+/boot/
+/lib/modules/
+/etc/systemd/
+```
+
+---
+
+## 📄 Sample logs
+
+**Windows**
+
+```
+Event ID 12 – System started
+Event ID 219 – Driver failed to load
+```
+
+**Linux**
+
+```
+kernel: loading module xyz
+```
+
+---
+
+## 🧰 3rd-party tools
+
+* Sysinternals Autoruns
+* EDR boot telemetry
+* OSQuery
+
+---
+
+# 🌱 Environment Variables
+
+## 🔹 What
+
+Environment variables are key-value pairs that control how applications and the OS behave
+Examples: `PATH`, `TEMP`, `HOME`
+
+---
+
+## 📍 Where to check
+
+* User environment
+* System environment
+* Application execution context
+
+---
+
+## 🔍 How to check
+
+### Windows
+
+```cmd
+set
+```
+
+System Properties → Environment Variables
+
+### Linux
+
+```bash
+env
+printenv
+```
+
+---
+
+## ❓ Why SOC checks
+
+* PATH hijacking
+* DLL search order abuse
+* Malware redirects execution to malicious binaries
+
+---
+
+## 📁 Common abuse locations
+
+**Windows**
+
+```
+C:\Users\<user>\AppData\
+C:\Temp\
+```
+
+**Linux**
+
+```
+/tmp/
+/home/<user>/
+```
+
+---
+
+## 📄 Sample log
+
+**Windows – Event ID 4688**
+
+```
+Process started with modified PATH
+```
+
+(Usually detected via EDR, not native logs)
+
+---
+
+## 🧰 3rd-party tools
+
+* EDR behavior analytics
+* OSQuery
+* Process Explorer
+
+---
+
+# 🔐 Permissions and Ownership
+
+## 🔹 What
+
+Permissions define **who can read, write, or execute** files and services
+Ownership defines **who controls permission changes**
+
+---
+
+## 📍 Where to check
+
+* Files and folders
+* Services
+* Scheduled tasks
+* System binaries
+
+---
+
+## 🔍 How to check
+
+### Windows
+
+```cmd
+icacls file.exe
+```
+
+### Linux
+
+```bash
+ls -l
+stat file
+```
+
+---
+
+## ❓ Why SOC checks
+
+* Weak permissions = privilege escalation
+* Writable system files = persistence
+* World-writable binaries = high risk
+
+---
+
+## 📁 High-risk paths
+
+**Windows**
+
+```
+C:\Users\<user>\AppData\
+C:\ProgramData\
+```
+
+**Linux**
+
+```
+/tmp/
+/usr/bin/
+/etc/
+```
+
+---
+
+## 📄 Sample logs
+
+**Windows – Event ID 4670**
+
+```
+Permissions on an object were changed
+```
+
+**Linux**
+
+```
+chmod changed on /usr/bin/*
+```
+
+---
+
+## 🧰 3rd-party tools
+
+* EDR permission monitoring
+* OSQuery
+* Auditd
+
+---
+
+# 🧾 Registry Basics (Windows)
+
+## 🔹 What
+
+The Windows Registry is a centralized database that stores:
+
+* System configuration
+* Startup entries
+* Services
+* User settings
+
+It is a **primary persistence target**
+
+---
+
+## 📍 Where to check
+
+* Startup keys
+* Services
+* Policy changes
+
+---
+
+## 🔍 How to check
+
+```cmd
+regedit
+```
+
+---
+
+## 📁 Critical registry paths
+
+```
+HKLM\Software\Microsoft\Windows\CurrentVersion\Run
+HKCU\Software\Microsoft\Windows\CurrentVersion\Run
+HKLM\SYSTEM\CurrentControlSet\Services
+HKCU\Software\Microsoft\Windows\CurrentVersion\RunOnce
+```
+
+---
+
+## ❓ Why SOC checks
+
+* Malware auto-start
+* Hidden persistence
+* Living-off-the-land techniques
+
+---
+
+## 📄 Sample logs
+
+**Windows – Event ID 4657**
+
+```
+A registry value was modified
+Object Name: Run\Updater
+```
+
+---
+
+## 🧰 3rd-party tools
+
+* Sysinternals Autoruns
+* EDR persistence detection
+* OSQuery
+
+---
+
+## 🧠 Final SOC Mindset (OS Fundamentals)
+
+Most attacks follow this chain:
+
+**File write → Process → Service / Registry / Boot → Persistence**
+
+If you understand:
+
+* Boot
+* Environment
+* Permissions
+* Registry
+
+You can **reconstruct almost any endpoint attack timeline**
