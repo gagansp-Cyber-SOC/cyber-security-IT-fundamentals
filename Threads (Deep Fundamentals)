@@ -1,0 +1,135 @@
+
+# 🧵 Threads (Deep Fundamentals)
+
+---
+
+## 🔹 What is a Thread
+
+### ✅ What
+
+A **thread** is the smallest unit of execution inside a process.
+
+* One process can have **multiple threads**
+* Threads share the same memory space
+* Used to improve performance and parallel tasks
+
+Example:
+
+* A browser uses multiple threads for tabs
+* Malware can hide execution inside a legitimate process thread
+
+---
+
+## 📍 Where to check
+
+* Suspicious process behavior
+* High CPU usage
+* Memory anomalies
+* EDR alerts showing process injection
+
+---
+
+## 🔍 How to check
+
+### Windows
+
+* **Task Manager** → Details → Select process → Analyze threads
+* **Process Explorer (Sysinternals)** → Threads tab
+
+### Linux
+
+```bash
+top -H
+ps -T -p <PID>
+```
+
+---
+
+## ❓ Why SOC checks threads
+
+* Malware injects malicious code into threads of trusted processes
+* Thread hijacking avoids creating new processes
+* Harder to detect than standalone executables
+
+---
+
+## 📁 Relevant paths (context of execution)
+
+Threads themselves don’t have paths, but **the process hosting them does**.
+
+### Windows process paths
+
+```
+C:\Windows\System32\
+C:\Program Files\
+C:\Users\<user>\AppData\
+```
+
+### Linux process paths
+
+```
+/usr/bin/
+/usr/local/bin/
+/tmp/
+```
+
+---
+
+## 📄 Sample logs
+
+### Windows (Process Injection Indicators)
+
+**Event ID 4688 + suspicious parent-child behavior**
+
+```
+Process created: rundll32.exe
+Unexpected thread activity detected by EDR
+```
+
+### EDR telemetry example
+
+```
+Injected thread detected in explorer.exe
+Source: C:\Users\user\AppData\payload.dll
+```
+
+---
+
+## 🧨 Attacker examples
+
+* CreateRemoteThread injection
+* DLL injection into trusted processes
+* Living-off-the-land attacks
+
+---
+
+## 🧰 3rd-party applications
+
+* **EDR platforms** (thread injection alerts)
+* **Process Explorer** (thread stack analysis)
+* **OSQuery**
+* **Volatility** (memory forensics)
+
+---
+
+## 🔁 Threads vs Processes (SOC View)
+
+| Area        | Process   | Thread            |
+| ----------- | --------- | ----------------- |
+| Visibility  | High      | Low               |
+| Detection   | Easier    | Harder            |
+| Persistence | No        | No                |
+| Abuse       | Execution | Stealth execution |
+
+---
+
+## 🧠 SOC Mindset
+
+If you see:
+
+* Legitimate process behaving abnormally
+* High CPU without child process
+* EDR alert mentioning injection or memory execution
+
+➡️ Think **threads**, not new processes.
+
