@@ -1,0 +1,363 @@
+
+# 🔹 Memory Fundamentals (Deep Fundamentals – SOC View)
+
+## What
+
+Memory (RAM) is where processes execute **in real time**.
+Unlike disk, memory is:
+
+* Volatile
+* Faster
+* Often not logged directly
+
+Attackers abuse memory to avoid writing files to disk.
+
+---
+
+## RAM vs Disk
+
+* **Disk** → Stores files permanently
+* **RAM** → Executes code temporarily
+
+Many modern attacks never touch disk.
+
+---
+
+## Virtual Memory
+
+* OS extends RAM using disk
+* Windows → Paging file
+* Linux → Swap
+
+Used when RAM is full.
+
+---
+
+## Paging File / Swap
+
+### Windows
+
+```
+C:\pagefile.sys
+```
+
+### Linux
+
+```bash
+swapon --show
+```
+
+Why SOC checks:
+
+* Malware artifacts can appear here
+* Memory-only payloads may partially spill to disk
+
+---
+
+## Why memory-only malware exists
+
+* Avoids antivirus scanning
+* Leaves minimal forensic traces
+* Executes via PowerShell, WMI, LOLBins
+
+---
+
+## Memory Injection Basics
+
+Common techniques:
+
+* Process injection
+* DLL injection
+* Reflective loading
+
+SOC signals:
+
+* Legit process behaving abnormally
+* No corresponding executable on disk
+
+---
+
+## Where to check
+
+* EDR memory alerts
+* Process behavior
+* Unexpected parent-child relationships
+
+---
+
+## 3rd-party tools
+
+* EDR platforms
+* Volatility
+* Process Explorer
+* Sysmon (if enabled)
+
+---
+
+## 🧠 SOC Mindset
+
+If behavior exists **without files**, think **memory abuse**.
+
+---
+
+# 🔹 Process Relationships (Deep Fundamentals – SOC View)
+
+## What
+
+Processes form **execution chains**:
+
+* Parent → Child
+* Command-line defines behavior
+
+Understanding relationships = understanding attack flow.
+
+---
+
+## Parent–Child Relationships
+
+Example:
+
+```
+winword.exe → powershell.exe → rundll32.exe
+```
+
+Normal apps rarely spawn scripting engines.
+
+---
+
+## Command-Line Arguments
+
+Command-line often reveals:
+
+* Download URLs
+* Encoded payloads
+* LOLBin abuse
+
+---
+
+## LOLBins (Living-off-the-Land Binaries)
+
+Examples:
+
+* `powershell.exe`
+* `cmd.exe`
+* `rundll32.exe`
+* `mshta.exe`
+* `certutil.exe`
+
+Used because:
+
+* Trusted by OS
+* Allowed through controls
+
+---
+
+## Where to check
+
+* Process creation logs
+* EDR process tree view
+* Command-line telemetry
+
+---
+
+## Sample log
+
+**Windows Event ID 4688**
+
+```
+New process created
+Parent: winword.exe
+Child: powershell.exe -enc <base64>
+```
+
+---
+
+## SOC red flags
+
+* Office spawning PowerShell
+* Browser spawning cmd
+* SYSTEM spawning user apps
+
+---
+
+## 🧠 SOC Mindset
+
+Processes tell the **story of execution**.
+
+---
+
+# 🔹 Startup Files & Locations (Deep Fundamentals – SOC View)
+
+## What
+
+Startup files define **what runs automatically** at:
+
+* Boot
+* User login
+
+Used heavily for persistence.
+
+---
+
+## Windows Startup Folders
+
+### User
+
+```
+C:\Users\<user>\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
+```
+
+### System
+
+```
+C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup
+```
+
+---
+
+## Linux Init & Startup
+
+### systemd units
+
+```
+/etc/systemd/system/
+/lib/systemd/system/
+```
+
+### Legacy
+
+```
+/etc/init.d/
+/etc/rc.local
+```
+
+---
+
+## Why SOC checks startup files
+
+* Simple persistence
+* Easy to overlook
+* Survives reboot
+
+---
+
+## SOC red flags
+
+* Scripts in startup folders
+* Startup items pointing to temp paths
+* No matching installed application
+
+---
+
+## 3rd-party tools
+
+* Autoruns
+* EDR persistence views
+* OSQuery
+
+---
+
+## 🧠 SOC Mindset
+
+If malware returns after reboot → **startup missed**
+
+---
+
+# 🔹 Time & Logging Fundamentals (Deep Fundamentals – SOC View)
+
+## System Time vs UTC
+
+* Logs may be in:
+
+  * Local time
+  * UTC
+* SIEM often normalizes to UTC
+
+---
+
+## NTP (Time Sync)
+
+Keeps systems aligned.
+
+Why SOC checks:
+
+* Time skew breaks investigations
+* Attackers may tamper with time
+
+---
+
+## Time Skew Impact
+
+* Incorrect timelines
+* False correlations
+* Missed attack chains
+
+---
+
+## Log Timeline Correlation Issues
+
+Problems arise when:
+
+* Multiple systems have different clocks
+* Logs rotate
+* Timezones misunderstood
+
+---
+
+## Logging Subsystem Basics
+
+### Windows Logs
+
+* Security → Auth, process
+* System → Services, drivers
+* Application → App errors
+
+### Linux Logs
+
+```
+/var/log/auth.log
+/var/log/syslog
+/var/log/messages
+```
+
+---
+
+## Log Rotation (Linux)
+
+* Old logs archived
+* New logs created
+* Evidence may be lost if not collected
+
+---
+
+## Log Tampering Indicators
+
+* Missing logs
+* Cleared event logs
+* Sudden log gaps
+
+Example:
+**Windows Event ID 1102**
+
+```
+Audit log was cleared
+```
+
+---
+
+## 🧠 SOC Mindset
+
+Bad timestamps = bad investigations.
+Time accuracy is as important as detection.
+
+---
+
+## ✅ Status Update
+
+You now have **L2–L3 SOC-level OS fundamentals**, including:
+
+* Kernel abuse
+* Memory attacks
+* Process execution chains
+* Persistence locations
+* Time & logging accuracy
