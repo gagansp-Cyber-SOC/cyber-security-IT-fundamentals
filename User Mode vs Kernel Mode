@@ -1,0 +1,219 @@
+# 🧠 User Mode vs Kernel Mode (Deep Fundamentals – SOC View)
+
+---
+
+## 🔹 What is User Mode
+
+### ✅ What
+
+User Mode is where:
+
+* Regular applications run
+* Limited access to system resources
+* Crashes do **not** crash the OS
+
+Examples:
+
+* Browsers
+* Office apps
+* Scripts
+* Most third-party software
+
+---
+
+### 📍 Where to check
+
+* Running processes
+* Application behavior
+* CPU / memory usage
+
+---
+
+### 🔍 How to check
+
+**Windows**
+
+* Task Manager → Details tab
+* Process Explorer (Sysinternals)
+
+**Linux**
+
+```bash
+ps aux
+top
+```
+
+---
+
+### ❓ Why SOC checks User Mode
+
+* Malware often **starts** in user mode
+* Initial execution happens here
+* Easier to detect than kernel threats
+
+---
+
+### 📁 Common paths (user-mode binaries)
+
+**Windows**
+
+```
+C:\Program Files\
+C:\Program Files (x86)\
+C:\Users\<user>\AppData\
+```
+
+**Linux**
+
+```
+/usr/bin/
+/usr/local/bin/
+/home/<user>/
+```
+
+---
+
+### 📄 Sample log
+
+**Windows – Event ID 4688**
+
+```
+A new process has been created
+Process Name: C:\Users\user\AppData\malware.exe
+```
+
+---
+
+### 🧰 3rd-party tools
+
+* EDR platforms
+* Process Explorer
+* OSQuery
+
+---
+
+## 🔹 What is Kernel Mode
+
+### ⚠️ What
+
+Kernel Mode is where:
+
+* OS core runs
+* Drivers execute
+* Full access to hardware and memory
+
+Any crash here can:
+❌ Blue Screen (Windows)
+❌ Kernel panic (Linux)
+
+---
+
+### 📍 Where to check
+
+* Drivers
+* Kernel modules
+* System crashes
+
+---
+
+### 🔍 How to check
+
+**Windows**
+
+* Device Manager → Drivers
+* `driverquery`
+* Sysinternals → Driver View
+
+**Linux**
+
+```bash
+lsmod
+dmesg
+```
+
+---
+
+### ❓ Why SOC checks Kernel Mode
+
+* Kernel malware = **maximum privilege**
+* Can hide from security tools
+* Rootkits and bootkits live here
+
+---
+
+### 📁 Critical paths (kernel components)
+
+**Windows**
+
+```
+C:\Windows\System32\drivers\
+```
+
+**Linux**
+
+```
+/lib/modules/
+/boot/
+```
+
+---
+
+### 📄 Sample logs
+
+**Windows**
+
+* Event ID 1001 (BugCheck)
+* Event ID 219 (Driver failure)
+
+**Linux**
+
+```bash
+dmesg | grep -i error
+```
+
+---
+
+### 🧨 Attacker examples
+
+* Malicious driver signed or exploited
+* Rootkit hooking kernel functions
+* Bypassing EDR visibility
+
+---
+
+### 🧰 3rd-party tools
+
+* Sysinternals (Process Explorer, Autoruns)
+* EDR kernel telemetry
+* OSQuery
+* Kernel debuggers (advanced)
+
+---
+
+## 🔁 User Mode vs Kernel Mode (Quick Comparison)
+
+| Area             | User Mode       | Kernel Mode  |
+| ---------------- | --------------- | ------------ |
+| Privilege        | Limited         | Full         |
+| Stability impact | App crash only  | System crash |
+| Malware type     | Initial loaders | Rootkits     |
+| Detection        | Easier          | Harder       |
+| SOC priority     | High            | Critical     |
+
+---
+
+## 🧠 SOC Mindset (Very Important)
+
+Most attacks:
+
+1. Start in **user mode**
+2. Try to **escalate to kernel mode**
+3. Aim to **hide and persist**
+
+If you see:
+
+* Unknown drivers
+* Unexpected kernel crashes
+* Unsigned kernel modules
+
+➡️ Treat as **high-severity incident**
