@@ -1,0 +1,180 @@
+# ☁️ SOC CLOUD FUNDAMENTALS — SECURITY VIEW (WHY • WHAT • WHERE • HOW)
+
+> **Audience:** SOC L1–L2 (Defensive)
+>
+> **Goal:** Help SOC analysts investigate cloud activity the same way they investigate on‑prem incidents
+>
+> **Core Truth:** In the cloud, **identity is the perimeter and logs are the only visibility**
+
+---
+
+## 🏗️ 1️⃣ IaaS vs PaaS vs SaaS (SOC VIEW, NOT MARKETING)
+
+### 🔹 WHAT THEY MEAN
+
+| Model | What Customer Manages | What Provider Manages | SOC Impact                      |
+| ----- | --------------------- | --------------------- | ------------------------------- |
+| IaaS  | OS, apps, identity    | Hardware, hypervisor  | Similar to on‑prem + cloud logs |
+| PaaS  | App logic, identity   | OS, runtime, infra    | Limited host visibility         |
+| SaaS  | Identity, data usage  | Everything else       | Logs = only evidence            |
+
+### 🔹 WHY SOC CARES
+
+Visibility reduces as you move:
+
+```
+IaaS → PaaS → SaaS
+```
+
+SOC must rely more on:
+
+* Identity logs
+* Audit logs
+
+---
+
+## 🤝 2️⃣ SHARED RESPONSIBILITY MODEL
+
+### 🔹 WHAT
+
+Security responsibility is **split**, not transferred
+
+### 🔹 COMMON SOC MISTAKE
+
+"Cloud provider secures everything" ❌
+
+### 🔹 REALITY (SECURITY VIEW)
+
+| Area               | Customer | Provider |
+| ------------------ | -------- | -------- |
+| Identity & access  | ✅        | ❌        |
+| Data protection    | ✅        | ❌        |
+| OS patching (IaaS) | ✅        | ❌        |
+| Physical DC        | ❌        | ✅        |
+
+### 🔹 WHY SOC CARES
+
+Most cloud breaches occur due to **customer misconfiguration**
+
+---
+
+## 👤 3️⃣ CLOUD IDENTITY‑FIRST SECURITY
+
+### 🔹 WHAT
+
+Cloud access is controlled by:
+
+* Users
+* Roles
+* Tokens
+* APIs
+
+### 🔹 WHY SOC CARES
+
+No internal network trust
+
+Attackers target:
+
+* Credentials
+* Tokens
+* API keys
+
+### 🔹 COMMON ATTACKS
+
+* OAuth abuse
+* Token theft
+* MFA fatigue
+
+---
+
+## 📜 4️⃣ CLOUD LOGGING BASICS (NON‑NEGOTIABLE)
+
+### 🔹 WHAT LOGS MATTER MOST
+
+**Identity logs (Top Priority)**
+
+* Sign‑ins
+* MFA results
+* Token issuance
+
+**Audit logs**
+
+* Role changes
+* Resource access
+
+**Service logs**
+
+* Storage access
+* API calls
+
+### 🔹 WHERE TO LOOK
+
+Examples
+
+* Azure AD / Entra ID logs
+* AWS CloudTrail
+* Google Cloud Audit Logs
+
+### 🔹 SAMPLE LOG
+
+```
+User=gagan
+Action=LoginSuccess
+App=SharePoint
+IP=185.x.x.x
+```
+
+SOC questions
+
+* Known IP?
+* MFA used?
+
+---
+
+## 🧨 5️⃣ COMMON CLOUD MISCONFIGURATIONS (SOC HOTSPOTS)
+
+### 🔹 IDENTITY MISCONFIGS
+
+* MFA not enforced
+* Excessive admin roles
+
+### 🔹 STORAGE MISCONFIGS
+
+* Public buckets
+* Over‑permissive access
+
+### 🔹 NETWORK MISCONFIGS
+
+* Open security groups
+* Wide IP ranges (0.0.0.0/0)
+
+### 🔹 WHY SOC CARES
+
+Misconfigs are exploited without malware
+
+---
+
+## 🔍 6️⃣ CLOUD INVESTIGATION MINDSET (MISSING AREA)
+
+### 🔹 SOC QUESTIONS
+
+* Who accessed the resource?
+* From where?
+* With what role?
+* Was it expected?
+
+### 🔹 CORRELATION EXAMPLE
+
+```
+Cloud login → API call → Data download
+```
+
+---
+
+## 🧠 FINAL SOC RULE
+
+> **In cloud incidents, identity logs replace packet captures**
+
+If identity logs are missing, the investigation is blind
+
+
