@@ -1,0 +1,293 @@
+
+
+# ⏰ Scheduled Tasks & WMI Persistence (Deep Fundamentals)
+
+---
+
+## 🔹 What (Scheduled Tasks)
+
+**Scheduled Tasks** allow programs or scripts to run automatically based on:
+
+* Time
+* System events
+* User logon
+* System startup
+
+They are designed for:
+
+* System maintenance
+* Updates
+* Admin automation
+
+Attackers use them heavily for **stealthy, reliable persistence**.
+
+---
+
+## 🔹 Where to check
+
+* Task Scheduler (GUI)
+* Task XML files on disk
+* Security Event Logs
+* Task Scheduler Operational logs
+* WMI subscriptions
+* EDR persistence alerts
+
+---
+
+## 🔹 How to check
+
+### Windows (Built-in)
+
+GUI
+
+* Task Scheduler → Task Scheduler Library
+
+Command line
+
+```cmd
+schtasks /query /fo LIST /v
+```
+
+PowerShell
+
+```powershell
+Get-ScheduledTask
+```
+
+---
+
+## 🔹 Task components (must understand)
+
+Every scheduled task has:
+
+### 🔸 Trigger (WHEN it runs)
+
+* At logon
+* At startup
+* On schedule (daily, hourly)
+* On event (Event ID based)
+
+### 🔸 Action (WHAT it runs)
+
+* Executable
+* Script
+* PowerShell
+* Command line
+
+### 🔸 Context (HOW it runs)
+
+* User account
+* SYSTEM
+* Highest privileges
+* Hidden or visible
+
+---
+
+## 🔹 Why SOC checks scheduled tasks
+
+* Tasks survive reboot
+* Can run as **SYSTEM**
+* Easy to hide among legitimate tasks
+* Often overlooked by analysts
+* Can trigger without user interaction
+
+Many malware families use **only scheduled tasks** for persistence.
+
+---
+
+## 🔹 Where tasks are stored (VERY IMPORTANT)
+
+### On disk
+
+```
+C:\Windows\System32\Tasks\
+```
+
+(Each task is an XML file)
+
+### Registry references
+
+```
+HKLM\Software\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks
+HKLM\Software\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree
+```
+
+---
+
+## 🔹 Where tasks are logged
+
+### Security Log
+
+**Event ID 4698** – Task created
+**Event ID 4699** – Task deleted
+**Event ID 4700** – Task enabled
+**Event ID 4702** – Task updated
+
+Example
+
+```
+A scheduled task was created
+Task Name: \WindowsUpdateCheck
+Action: C:\Users\user\AppData\update.exe
+```
+
+### Task Scheduler Operational Log
+
+```
+Microsoft-Windows-TaskScheduler/Operational
+```
+
+---
+
+## 🔹 Common attacker abuse patterns
+
+* Task names mimicking Windows or updates
+* Actions pointing to:
+
+  * `AppData`
+  * `Temp`
+  * User-writable paths
+* Triggers set to:
+
+  * At logon
+  * Every 5–10 minutes
+* Hidden tasks
+* Tasks running as SYSTEM
+
+---
+
+## 🔹 Real malware scheduled task examples
+
+### Example 1: Fake update task
+
+```
+Task Name: WindowsUpdateMonitor
+Trigger: At logon
+Action: C:\ProgramData\update.exe
+Run as: SYSTEM
+```
+
+### Example 2: PowerShell persistence
+
+```
+Action: powershell.exe -EncodedCommand <base64>
+Trigger: Every 15 minutes
+```
+
+### Example 3: Event-based trigger
+
+```
+Trigger: On Event ID 4624 (logon)
+```
+
+Used to launch malware only when a user logs in.
+
+---
+
+## 🔹 WMI Persistence (Advanced but critical)
+
+### 🔸 What
+
+WMI (Windows Management Instrumentation) allows:
+
+* Event-based automation
+* System monitoring
+
+Attackers abuse WMI to:
+
+* Execute payloads when specific events occur
+* Avoid scheduled task visibility
+
+This is **fileless persistence**.
+
+---
+
+### 🔸 Where to check (WMI)
+
+WMI namespaces:
+
+```
+root\subscription
+```
+
+Key components:
+
+* Event Filter
+* CommandLineEventConsumer
+* FilterToConsumerBinding
+
+---
+
+### 🔸 How SOC checks WMI
+
+PowerShell
+
+```powershell
+Get-WmiObject -Namespace root\subscription -Class __EventFilter
+Get-WmiObject -Namespace root\subscription -Class CommandLineEventConsumer
+```
+
+EDR tools often surface this more clearly than native logs.
+
+---
+
+### 🔸 Why WMI persistence is dangerous
+
+* No startup entry
+* No scheduled task
+* No obvious binary
+* Triggers silently on system events
+
+Often used by **advanced attackers**.
+
+---
+
+## 🔹 Logs related to WMI
+
+WMI activity may appear in:
+
+* Security logs (process creation)
+* EDR telemetry
+* Sysmon (if enabled)
+
+Example indicator:
+
+```
+wmiprvse.exe spawning powershell.exe
+```
+
+---
+
+## 🔹 What looks suspicious (SOC signals)
+
+* Tasks created recently without IT change
+* SYSTEM tasks pointing to user folders
+* Encoded PowerShell in task actions
+* Frequent execution intervals
+* WMI consumers without known purpose
+* Persistence with no startup registry entries
+
+---
+
+## 🔹 3rd-party applications SOC uses
+
+* **Sysinternals Autoruns** (Scheduled Tasks + WMI tabs)
+* **EDR platforms**
+* **OSQuery**
+* **SIEM** (Event ID correlation)
+* **Sysmon** (if deployed)
+
+---
+
+## 🧠 SOC Mindset
+
+If malware:
+
+* Survives reboot
+* Has no Run key
+* Has no obvious service
+
+➡️ **Check Scheduled Tasks and WMI**
+
+These two account for a large percentage of **“it came back again”** incidents.
+
