@@ -1,0 +1,527 @@
+
+
+# 🖥️ Operating Systems – Deep Fundamentals
+
+---
+
+## 1️⃣ What is an Operating System (OS)
+
+### 🔹 What
+
+An OS is the core software that:
+
+* Manages hardware (CPU, memory, disk)
+* Runs applications
+* Handles users, permissions, and processes
+
+Examples:
+
+* Windows
+* Linux
+* macOS
+
+---
+
+### 🔹 Where to check
+
+* Endpoint
+* Server
+* VM
+* Cloud instances
+
+---
+
+### 🔹 How to check
+
+**Windows**
+
+```cmd
+winver
+systeminfo
+```
+
+**Linux**
+
+```bash
+uname -a
+cat /etc/os-release
+```
+
+---
+
+### 🔹 Why SOC checks this
+
+* OS decides **log locations**
+* OS version decides **vulnerabilities**
+* Attack techniques differ per OS
+
+---
+
+### 🔹 Sample log relevance
+
+* Windows Event Logs
+* Linux `/var/log/*`
+
+---
+
+## 2️⃣ Windows vs Linux vs macOS
+
+### 🔹 What
+
+| OS      | Used For               |
+| ------- | ---------------------- |
+| Windows | Endpoints, AD, servers |
+| Linux   | Servers, cloud, infra  |
+| macOS   | Developer endpoints    |
+
+---
+
+### 🔹 Where to check
+
+* Endpoints
+* Servers
+* Cloud VMs
+
+---
+
+### 🔹 How to check
+
+**Windows**
+
+```cmd
+systeminfo | findstr OS
+```
+
+**Linux**
+
+```bash
+lsb_release -a
+```
+
+---
+
+### 🔹 Why SOC cares
+
+* Windows → AD attacks, malware
+* Linux → SSH brute force, crypto miners
+* macOS → Less common but rising attacks
+
+---
+
+### 🔹 Example
+
+* Brute force on SSH → Linux
+* LSASS dumping → Windows
+
+---
+
+## 3️⃣ User Mode vs Kernel Mode
+
+### 🔹 What
+
+* **User Mode** → Applications run here
+* **Kernel Mode** → OS core, drivers
+
+---
+
+### 🔹 Where to check
+
+* Process behavior
+* Driver activity
+* Crash logs
+
+---
+
+### 🔹 How to check
+
+**Windows**
+
+* Task Manager → Details
+* Driver list
+
+**Linux**
+
+```bash
+lsmod
+```
+
+---
+
+### 🔹 Why SOC checks
+
+* Kernel-level malware = HIGH impact
+* Rootkits operate in kernel mode
+
+---
+
+### 🔹 Example
+
+* Normal app → user mode
+* Malicious driver → kernel mode
+
+---
+
+## 4️⃣ Processes vs Services
+
+### 🔹 What
+
+* **Process** → Running program
+* **Service** → Background process (persistent)
+
+---
+
+### 🔹 Where to check
+
+* Endpoints
+* Servers
+
+---
+
+### 🔹 How to check
+
+**Windows**
+
+```cmd
+tasklist
+services.msc
+```
+
+**Linux**
+
+```bash
+ps aux
+systemctl list-units
+```
+
+---
+
+### 🔹 Why SOC checks
+
+* Malware often runs as a **process**
+* Persistence often via **service**
+
+---
+
+### 🔹 Path
+
+**Windows**
+
+```
+C:\Windows\System32\
+```
+
+---
+
+### 🔹 Sample log
+
+**Windows Event ID 4688**
+
+```
+A new process has been created
+```
+
+---
+
+## 5️⃣ Threads
+
+### 🔹 What
+
+Threads are **smaller execution units** inside a process
+
+---
+
+### 🔹 Where to check
+
+* Performance issues
+* Suspicious behavior
+
+---
+
+### 🔹 How to check
+
+**Windows**
+
+* Process Explorer (Sysinternals)
+
+**Linux**
+
+```bash
+top -H
+```
+
+---
+
+### 🔹 Why SOC checks
+
+* Malware hides inside legitimate processes using threads
+
+---
+
+### 🔹 3rd-party
+
+* **Process Explorer**
+* **EDR tools**
+
+---
+
+## 6️⃣ File Systems (NTFS, FAT32, ext4)
+
+### 🔹 What
+
+File system defines how data is stored
+
+| FS    | OS      |
+| ----- | ------- |
+| NTFS  | Windows |
+| FAT32 | USB     |
+| ext4  | Linux   |
+
+---
+
+### 🔹 Where to check
+
+* Disk
+* External media
+
+---
+
+### 🔹 How to check
+
+**Windows**
+
+```cmd
+fsutil fsinfo volumeinfo c:
+```
+
+**Linux**
+
+```bash
+df -T
+```
+
+---
+
+### 🔹 Why SOC checks
+
+* NTFS supports permissions and auditing
+* FAT32 has **no permissions** → malware risk
+
+---
+
+### 🔹 Path relevance
+
+* Hidden malicious files
+* Alternate Data Streams (NTFS)
+
+---
+
+## 7️⃣ System Boot Process
+
+### 🔹 What
+
+Steps from power-on → OS loaded
+
+---
+
+### 🔹 Where to check
+
+* Boot logs
+* Startup entries
+
+---
+
+### 🔹 How to check
+
+**Windows**
+
+```cmd
+bcdedit
+```
+
+**Linux**
+
+```bash
+dmesg
+```
+
+---
+
+### 🔹 Why SOC checks
+
+* Bootkits
+* Persistence before OS loads
+
+---
+
+### 🔹 Sample log
+
+* Boot failure
+* Unsigned driver loading
+
+---
+
+## 8️⃣ Environment Variables
+
+### 🔹 What
+
+Variables that affect system and apps
+
+Examples:
+
+* PATH
+* TEMP
+
+---
+
+### 🔹 Where to check
+
+* User environment
+* System environment
+
+---
+
+### 🔹 How to check
+
+**Windows**
+
+```cmd
+set
+```
+
+**Linux**
+
+```bash
+env
+```
+
+---
+
+### 🔹 Why SOC checks
+
+* Malware hijacks PATH
+* DLL hijacking
+
+---
+
+### 🔹 Example
+
+Malicious exe placed earlier in PATH
+
+---
+
+## 9️⃣ Permissions and Ownership
+
+### 🔹 What
+
+Defines **who can access what**
+
+---
+
+### 🔹 Where to check
+
+* Files
+* Folders
+* Services
+
+---
+
+### 🔹 How to check
+
+**Windows**
+
+```cmd
+icacls file.txt
+```
+
+**Linux**
+
+```bash
+ls -l
+```
+
+---
+
+### 🔹 Why SOC checks
+
+* Weak permissions = easy privilege escalation
+
+---
+
+### 🔹 Example
+
+* World-writable binary → privilege abuse
+
+---
+
+## 🔟 Registry Basics (Windows)
+
+### 🔹 What
+
+Central config database for Windows
+
+---
+
+### 🔹 Where to check
+
+* Startup entries
+* Services
+* Policies
+
+---
+
+### 🔹 How to check
+
+```cmd
+regedit
+```
+
+---
+
+### 🔹 Key paths (VERY IMPORTANT)
+
+```
+HKLM\Software\Microsoft\Windows\CurrentVersion\Run
+HKCU\Software\Microsoft\Windows\CurrentVersion\Run
+HKLM\SYSTEM\CurrentControlSet\Services
+```
+
+---
+
+### 🔹 Why SOC checks
+
+* Malware persistence
+* Hidden startup entries
+
+---
+
+### 🔹 Sample log
+
+**Event ID 4657**
+
+```
+A registry value was modified
+```
+
+---
+
+## 🔹 3rd-Party Applications SOC Uses
+
+* Sysinternals Suite
+* EDR platforms
+* OSQuery
+* Autoruns
+
+---
+
+## 🧠 Final SOC Mindset
+
+If you understand:
+
+* OS
+* Processes
+* Permissions
+* Logs
+* Persistence paths
+
+You can investigate **any alert**, even without tools.
+
