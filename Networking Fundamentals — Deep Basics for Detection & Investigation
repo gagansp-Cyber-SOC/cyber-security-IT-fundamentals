@@ -1,0 +1,355 @@
+# 🌐 SOC NETWORKING FUNDAMENTALS — DEEP BASICS (WHY • WHAT • WHERE • HOW)
+
+> **Audience:** SOC L1–L2 (Defensive)
+>
+> **Goal:** After reading this, you should NOT need Google
+>
+> **Mindset:** Every network concept answers one question — *Is this traffic normal or suspicious?*
+
+---
+
+## 🧱 1️⃣ OSI & TCP/IP — SOC VIEW (NOT EXAM VIEW)
+
+### 🔹 WHAT IT IS
+
+A mental model to understand **where** something broke and **what evidence** to look for
+
+OSI = *conceptual layers*
+TCP/IP = *what actually runs on the wire*
+
+| OSI Layer | TCP/IP         | SOC Meaning      | What Breaks Here    | Logs You Check  |
+| --------- | -------------- | ---------------- | ------------------- | --------------- |
+| L7 App    | Application    | User intent      | Phishing, C2, Exfil | Proxy, App, DNS |
+| L6–L5     | Application    | Session handling | Token abuse         | App logs        |
+| L4        | Transport      | Port + protocol  | Scan, brute force   | Firewall, Flow  |
+| L3        | Internet       | IP routing       | Lateral movement    | NetFlow         |
+| L2        | Network Access | MAC, ARP         | MITM                | Switch logs     |
+
+### 🔹 WHY SOC CARES
+
+Because **alerts map to layers**
+
+Example
+
+* Port scan → L4
+* DNS tunneling → L7
+* ARP spoofing → L2
+
+Wrong layer = wrong investigation
+
+### 🔹 HOW SOC USES IT
+
+Alert says
+
+> "Suspicious outbound connection"
+
+SOC asks
+
+* L3 → Which IP
+* L4 → Which port
+* L7 → Which protocol / domain
+
+---
+
+## 🔌 2️⃣ PORTS, PROTOCOLS & SERVICES
+
+### 🔹 WHAT
+
+* **Port** = Door number
+* **Protocol** = Language
+* **Service** = Application listening
+
+Example
+
+```
+443/TCP → HTTPS → Web service
+22/TCP → SSH → Remote admin
+3389/TCP → RDP → Windows login
+```
+
+### 🔹 WHY SOC CARES
+
+Ports answer **WHAT service is exposed or abused**
+
+Red flags
+
+* Non-standard ports (SSH on 2222)
+* Rare ports (4444, 1337)
+* Service mismatch (HTTP over 53)
+
+### 🔹 WHERE TO CHECK
+
+**Windows**
+
+```
+netstat -ano
+Get-NetTCPConnection
+```
+
+**Linux**
+
+```
+ss -tulpn
+netstat -plant
+```
+
+**Firewall / SIEM fields**
+
+* src_port
+* dest_port
+* protocol
+
+### 🔹 SAMPLE LOG (Firewall)
+
+```
+SRC=10.0.0.5 DST=185.199.110.153 DPT=4444 PROTO=TCP ACTION=ALLOW
+```
+
+SOC thought
+
+* Why port 4444?
+* Known C2 port?
+* Who initiated?
+
+---
+
+## 🌐 3️⃣ DNS — MOST ABUSED PROTOCOL
+
+### 🔹 WHAT
+
+Resolves **name → IP**
+
+### 🔹 WHY ATTACKERS LOVE IT
+
+* Almost always allowed
+* Looks normal
+* Works even without internet browsing
+
+### 🔹 ATTACKER USES
+
+* C2 over DNS
+* Data exfil via subdomains
+* Domain generation algorithms (DGA)
+
+### 🔹 WHERE TO LOOK
+
+**Windows**
+
+```
+Event ID 22 (DNS Client)
+```
+
+**Linux**
+
+```
+/var/log/syslog
+journalctl -u systemd-resolved
+```
+
+**SIEM fields**
+
+* query
+* response
+* query_length
+* domain
+
+### 🔹 SAMPLE DNS LOG
+
+```
+client=10.0.0.8 query=ajd92kd9skd92.malicious.xyz type=A
+```
+
+SOC questions
+
+* Random string?
+* Repeated pattern?
+* Rare domain?
+
+---
+
+## 🧾 4️⃣ DHCP — WHO GOT WHICH IP
+
+### 🔹 WHAT
+
+Assigns IPs dynamically
+
+### 🔹 WHY SOC CARES
+
+Identity mapping
+
+* User → Device → IP → Alert
+
+### 🔹 WHERE TO LOOK
+
+**Windows DHCP**
+
+```
+Event ID 10, 11
+```
+
+**Linux**
+
+```
+/var/log/dhcpd.log
+```
+
+### 🔹 SAMPLE
+
+```
+DHCPACK on 10.0.0.25 to 00:50:56:a1:b2:c3
+```
+
+SOC use
+
+* Identify device behind alert
+
+---
+
+## 🔄 5️⃣ ARP — SILENT KILLER
+
+### 🔹 WHAT
+
+Maps **IP → MAC**
+
+### 🔹 WHY SOC CARES
+
+ARP spoofing = MITM
+
+### 🔹 RED FLAGS
+
+* Same IP, multiple MACs
+* Frequent ARP replies
+
+### 🔹 COMMANDS
+
+**Windows**
+
+```
+arp -a
+```
+
+**Linux**
+
+```
+ip neigh
+```
+
+---
+
+## 🛡️ 6️⃣ PROXY, NAT, VPN
+
+### 🔹 PROXY
+
+Acts on behalf of users
+
+SOC impact
+
+* Masks real destination
+* Logs show **URL, user, action**
+
+Sample
+
+```
+user=gagan url=drive.google.com action=allowed
+```
+
+### 🔹 NAT
+
+Hides internal IPs
+
+SOC impact
+
+* One public IP ≠ one device
+
+Need NAT logs
+
+### 🔹 VPN
+
+Encrypted tunnel
+
+SOC focus
+
+* Login time
+* Source IP
+* Assigned internal IP
+
+Sample
+
+```
+user=gagan src_ip=49.x.x.x vpn_ip=10.8.0.12
+```
+
+---
+
+## ↔️ 7️⃣ EAST–WEST vs NORTH–SOUTH
+
+### 🔹 WHAT
+
+* North–South = Internet ↔ Org
+* East–West = Internal ↔ Internal
+
+### 🔹 WHY SOC CARES
+
+* Lateral movement happens East–West
+* Firewalls often weak internally
+
+### 🔹 RED FLAGS
+
+* Server talking to many servers
+* Workstation scanning subnet
+
+---
+
+## 📊 8️⃣ NETWORK LOGS & FLOW DATA
+
+### 🔹 FLOW LOGS SHOW
+
+* Who talked to whom
+* When
+* How much data
+
+### 🔹 SAMPLE NETFLOW
+
+```
+src=10.0.0.5 dst=45.67.89.10 bytes=234567 duration=360s
+```
+
+SOC question
+
+* Why so much data?
+* Known destination?
+
+---
+
+## 🧨 9️⃣ COMMON NETWORK ATTACKS
+
+### 🔹 PORT SCAN
+
+Indicators
+
+* Many ports
+* Same source
+
+Log pattern
+
+```
+DPT=21,22,23,80,443
+```
+
+### 🔹 MITM (ARP SPOOF)
+
+Indicators
+
+* Duplicate MACs
+* Cert warnings
+
+---
+
+## 🧠 FINAL SOC RULE
+
+> **Network traffic is never good or bad by itself**
+>
+> **Context decides everything**
+
+User + Device + Time + Destination + Volume = Truth
+
