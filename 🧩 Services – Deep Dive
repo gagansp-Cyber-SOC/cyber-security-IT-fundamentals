@@ -1,0 +1,281 @@
+
+# 🧩 Services – Deep Dive (SOC View)
+
+---
+
+## 🔹 What (Services)
+
+A **service** is a background process that:
+
+* Starts automatically or on demand
+* Runs without user interaction
+* Often runs with **high privileges**
+* Persists across reboots
+
+Services are heavily used by:
+
+* OS components
+* Security tools
+* Databases
+* **Malware for persistence**
+
+---
+
+## 🔹 Where to check
+
+* Service configuration
+* Startup behavior
+* Service accounts
+* Binary path location
+* Recovery actions
+* Registry service entries
+* Process execution spawned by services
+
+---
+
+## 🔹 How to check
+
+### Windows (Built-in)
+
+GUI
+
+* `services.msc`
+
+Command line
+
+```cmd
+sc query
+sc qc <service_name>
+```
+
+PowerShell
+
+```powershell
+Get-Service
+```
+
+---
+
+## 🔹 Service Startup Types
+
+### 🔸 Automatic
+
+* Starts at system boot
+* Highest persistence value
+* Runs even without user login
+
+### 🔸 Manual
+
+* Starts when required
+* Lower persistence
+* Often used to blend in
+
+### 🔸 Disabled
+
+* Cannot start unless enabled
+* Malware may re-enable it
+
+---
+
+### Why SOC checks startup type
+
+* Auto services = persistent threats
+* Manual services may be triggered by malware
+* Disabled services re-enabled = red flag
+
+---
+
+## 🔹 Service Accounts (CRITICAL)
+
+### 🔸 SYSTEM
+
+* Highest privilege
+* Full local access
+* Common malware target
+
+### 🔸 LocalService
+
+* Limited local privileges
+* No network access
+
+### 🔸 NetworkService
+
+* Limited local privileges
+* Network access using machine account
+
+---
+
+### Why SOC checks service accounts
+
+* Malware prefers SYSTEM
+* Misconfigured services running as SYSTEM are high-risk
+* Credential abuse and lateral movement often start here
+
+---
+
+## 🔹 Service Binary Path (Very Important)
+
+### Where to check
+
+```cmd
+sc qc <service_name>
+```
+
+Example output:
+
+```
+BINARY_PATH_NAME : C:\ProgramData\update.exe
+```
+
+---
+
+### Why SOC checks binary paths
+
+* Services running from:
+
+  * `AppData`
+  * `Temp`
+  * User-writable paths
+    are **almost always malicious**
+
+---
+
+### Common service binary paths
+
+**Legitimate**
+
+```
+C:\Windows\System32\
+C:\Program Files\
+```
+
+**High Risk**
+
+```
+C:\ProgramData\
+C:\Users\<user>\AppData\
+C:\Temp\
+```
+
+---
+
+## 🔹 Service Binary Path Abuse
+
+Attack techniques:
+
+* Replace service binary with malicious one
+* Point service to malicious executable
+* Use unquoted service paths
+
+### Unquoted Service Path Example
+
+```
+C:\Program Files Update Service\service.exe
+```
+
+Attacker drops:
+
+```
+C:\Program.exe
+```
+
+---
+
+## 🔹 Service Recovery Actions (Often Missed)
+
+### What
+
+Defines what happens if a service fails:
+
+* Restart service
+* Run a program
+* Reboot system
+
+### Where to check
+
+* Service properties → Recovery tab
+
+### Why SOC checks recovery actions
+
+* Malware uses recovery to **re-execute payload**
+* Even if killed, it restarts automatically
+
+---
+
+## 🔹 Registry Locations for Services
+
+```
+HKLM\SYSTEM\CurrentControlSet\Services\<ServiceName>
+```
+
+Key values:
+
+* ImagePath
+* Start
+* ObjectName
+* FailureActions
+
+---
+
+## 🔹 Sample Logs
+
+### Windows
+
+**Event ID 7045 – Service installed**
+
+```
+A service was installed in the system
+Service Name: WinUpdateHelper
+Binary Path: C:\ProgramData\helper.exe
+```
+
+**Event ID 7036 – Service state change**
+
+```
+Service entered the running state
+```
+
+---
+
+## 🔹 Common Attacker Abuse Patterns
+
+* Fake service names mimicking Windows
+* Services created outside patch windows
+* SYSTEM services pointing to user paths
+* Modified recovery actions
+* Service binary changed after installation
+
+---
+
+## 🔹 What looks suspicious (SOC signals)
+
+* New service with random name
+* Service binary in writable location
+* Unquoted service paths
+* Service running as SYSTEM unnecessarily
+* Frequent service restarts
+
+---
+
+## 🔹 3rd-party Applications SOC Uses
+
+* **Sysinternals Autoruns** (Services tab)
+* **EDR platforms**
+* **OSQuery**
+* **SIEM**
+* **Sysmon** (if deployed)
+
+---
+
+## 🧠 SOC Mindset
+
+If a system is:
+
+* Reinfected after reboot
+* Malware keeps restarting
+* No Run keys or scheduled tasks found
+
+➡️ **Services are the next place to check**
+
+Service abuse is one of the **most reliable persistence techniques**.
+
