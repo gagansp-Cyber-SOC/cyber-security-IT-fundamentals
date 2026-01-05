@@ -1,0 +1,187 @@
+# 🔍 SOC INVESTIGATION FUNDAMENTALS — DEEP BASICS (WHY • WHAT • HOW)
+
+> **Audience:** SOC L1–L2 (Defensive)
+>
+> **Goal:** Teach analysts *how to think* during an investigation, not just what to click
+>
+> **Core Truth:** Tools don’t investigate — **analysts do**
+
+---
+
+## 🧭 1️⃣ INVESTIGATION FLOW (NON‑NEGOTIABLE)
+
+### 🔹 WHAT
+
+A **structured path** from alert to conclusion
+
+### 🔹 WHY SOC CARES
+
+Without a flow:
+
+* Analysts jump randomly
+* Evidence gets missed
+* Wrong conclusions are made
+
+### 🔹 STANDARD FLOW
+
+```
+Alert → Validate → Scope → Correlate → Confirm → Decide
+```
+
+### 🔹 WHAT EACH STEP MEANS
+
+* **Validate** → Is the alert real?
+* **Scope** → How big is this?
+* **Correlate** → What else is related?
+* **Confirm** → Malicious or benign?
+* **Decide** → Close, contain, escalate
+
+---
+
+## ⏱️ 2️⃣ TIMELINE BUILDING (INVESTIGATION BACKBONE)
+
+### 🔹 WHAT
+
+A **chronological reconstruction** of events
+
+### 🔹 WHY SOC CARES
+
+Attackers rely on:
+
+* Speed
+* Confusion
+* Noise
+
+Timelines restore **clarity**
+
+### 🔹 HOW TO BUILD
+
+Always normalize to:
+
+* UTC
+* Single time window
+
+### 🔹 EXAMPLE
+
+```
+10:02 Failed login
+10:04 VPN success
+10:07 Admin group add
+```
+
+SOC question
+
+* Is this progression logical?
+
+---
+
+## 🧾 3️⃣ EVIDENCE COLLECTION
+
+### 🔹 WHAT COUNTS AS EVIDENCE
+
+* Logs
+* Screenshots
+* Hashes
+* Command output
+
+### 🔹 WHY SOC CARES
+
+Poor evidence = weak incident response
+
+### 🔹 RULES
+
+* Do not modify originals
+* Record timestamps
+* Keep source info
+
+### 🔹 EXAMPLE
+
+```
+Log Source: AD Security
+Event ID: 4728
+Time: 10:07 UTC
+```
+
+---
+
+## 🧩 4️⃣ CORRELATION THINKING
+
+### 🔹 WHAT
+
+Connecting **multiple weak signals** into one strong conclusion
+
+### 🔹 WHY SOC CARES
+
+Single alerts lie
+Correlation reveals intent
+
+### 🔹 EXAMPLE
+
+```
+EDR alert + VPN login + DNS anomaly
+```
+
+SOC insight
+
+* Separate events → noise
+* Together → attack
+
+---
+
+## 🧠 5️⃣ HYPOTHESIS‑BASED ANALYSIS
+
+### 🔹 WHAT
+
+Start with a theory, then prove or disprove it
+
+### 🔹 EXAMPLE HYPOTHESIS
+
+"This account is compromised"
+
+### 🔹 HOW TO TEST
+
+* Look for lateral movement
+* Check privilege changes
+* Validate data access
+
+### 🔹 WHY THIS WORKS
+
+Prevents tunnel vision
+
+---
+
+## 📝 6️⃣ DOCUMENTATION & REPORTING
+
+### 🔹 WHY THIS MATTERS
+
+If it’s not documented:
+
+* It didn’t happen
+* It can’t be defended
+
+### 🔹 WHAT TO DOCUMENT
+
+* What happened
+* How it was detected
+* Evidence
+* Decision made
+
+### 🔹 SIMPLE FORMAT
+
+```
+Summary
+Timeline
+Findings
+Conclusion
+```
+
+---
+
+## 🧠 FINAL SOC RULE
+
+> **An investigation is successful when the conclusion is defensible**
+
+Not when it is fast
+Not when it looks busy
+
+
