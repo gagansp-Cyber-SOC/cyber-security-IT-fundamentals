@@ -1,0 +1,187 @@
+
+
+# 🌱 Environment Variables (Deep Fundamentals)
+
+---
+
+## 🔹 What
+
+Environment variables are **key–value pairs** used by the operating system and applications to:
+
+* Control execution behavior
+* Define paths for binaries and libraries
+* Store temporary locations and user context
+
+Common examples:
+
+* `PATH`
+* `TEMP` / `TMP`
+* `HOME`
+* `USERPROFILE`
+
+They are inherited by processes at execution time.
+
+---
+
+## 🔹 Where to check
+
+* User environment variables
+* System-wide environment variables
+* Application execution context
+* Suspicious process launches
+
+---
+
+## 🔹 How to check
+
+### Windows
+
+```cmd
+set
+```
+
+GUI
+
+* System Properties → Advanced → Environment Variables
+
+PowerShell
+
+```powershell
+Get-ChildItem Env:
+```
+
+---
+
+### Linux
+
+```bash
+env
+printenv
+echo $PATH
+```
+
+---
+
+## 🔹 Why SOC checks this
+
+* **PATH hijacking** allows attackers to run malicious binaries instead of legitimate ones
+* **DLL search order hijacking** depends on environment behavior
+* Malware modifies environment variables to:
+
+  * Redirect execution
+  * Load malicious libraries
+  * Hide payload locations
+
+Environment abuse often **does not create new files immediately**, making it stealthy.
+
+---
+
+## 🔹 Common high-risk variables SOC monitors
+
+### Windows
+
+* `PATH`
+* `TEMP`
+* `TMP`
+* `COMSPEC`
+
+### Linux
+
+* `PATH`
+* `LD_LIBRARY_PATH`
+* `HOME`
+
+---
+
+## 🔹 Paths commonly abused via environment variables
+
+### Windows
+
+```
+C:\Users\<user>\AppData\Local\Temp\
+C:\Users\<user>\AppData\Roaming\
+C:\Temp\
+```
+
+### Linux
+
+```
+/tmp/
+/var/tmp/
+/home/<user>/
+```
+
+Attackers insert these paths **earlier in PATH** so malicious executables run first.
+
+---
+
+## 🔹 How attackers abuse environment variables
+
+* Place a malicious `cmd.exe`, `python`, or `ssh` binary in a writable directory
+* Modify PATH so the OS executes the malicious version
+* Abuse temp directories for payload execution
+* Redirect library loading paths
+
+---
+
+## 🔹 Sample logs
+
+### Windows (Indirect visibility)
+
+Environment variable changes are **not always logged by default**, but impact appears in:
+
+**Event ID 4688 – Process Creation**
+
+```
+Process Name: C:\Users\user\AppData\Local\Temp\powershell.exe
+Parent Process: explorer.exe
+```
+
+EDR telemetry often shows:
+
+```
+Suspicious PATH modification detected
+```
+
+---
+
+### Linux
+
+Environment changes surface via:
+
+```
+/var/log/auth.log
+```
+
+Example:
+
+```
+sudo: user modified environment variables
+```
+
+---
+
+## 🔹 What looks suspicious (SOC signals)
+
+* Executables running from temp paths
+* Legitimate binaries resolving from user-writable directories
+* PATH containing non-standard directories
+* Sudden execution failures or unexpected binaries
+
+---
+
+## 🔹 3rd-party applications SOC uses
+
+* **EDR platforms** (behavior & execution tracking)
+* **Process Explorer** (environment block inspection)
+* **OSQuery**
+* **SIEM** (process correlation)
+
+---
+
+## 🧠 SOC Mindset
+
+If a process path looks normal but behavior is not:
+➡️ Check **environment variables**
+
+Many attacks succeed not by dropping new malware, but by **changing how the OS resolves execution**.
