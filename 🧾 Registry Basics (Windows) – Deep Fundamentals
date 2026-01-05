@@ -1,0 +1,174 @@
+
+
+# 🧾 Registry Basics (Windows) – Deep Fundamentals (SOC View)
+
+---
+
+## 🔹 What
+
+The **Windows Registry** is a centralized hierarchical database that stores:
+
+* OS configuration
+* User settings
+* Installed software details
+* Startup and persistence settings
+* Service configurations
+* Security policies
+
+Almost everything Windows does is influenced by the registry, which makes it a **primary attacker target**.
+
+---
+
+## 🔹 Where to check
+
+* Startup and auto-run locations
+* Services configuration
+* User-specific settings
+* Security and policy changes
+* Recently modified keys
+
+---
+
+## 🔹 How to check
+
+### Windows (Built-in)
+
+Open Registry Editor:
+
+```cmd
+regedit
+```
+
+Query from command line:
+
+```cmd
+reg query HKLM\Software
+```
+
+---
+
+## 🔹 Why SOC checks this
+
+* Malware uses registry keys for **persistence**
+* Registry changes survive reboot
+* Living-off-the-land techniques rely heavily on registry
+* Attackers hide malicious entries among legitimate keys
+
+Many attacks leave **no new executable**, only registry changes.
+
+---
+
+## 🔹 Core Registry Hives (Must Know)
+
+```
+HKLM (HKEY_LOCAL_MACHINE) → System-wide settings
+HKCU (HKEY_CURRENT_USER) → User-specific settings
+HKCR (Classes) → File associations
+HKU  → Loaded user profiles
+HKCC → Hardware configuration
+```
+
+---
+
+## 🔹 Critical persistence paths (VERY IMPORTANT)
+
+### Auto-start locations
+
+```
+HKLM\Software\Microsoft\Windows\CurrentVersion\Run
+HKCU\Software\Microsoft\Windows\CurrentVersion\Run
+HKCU\Software\Microsoft\Windows\CurrentVersion\RunOnce
+```
+
+### Services
+
+```
+HKLM\SYSTEM\CurrentControlSet\Services
+```
+
+### Scheduled behavior & policies
+
+```
+HKLM\Software\Microsoft\Windows\CurrentVersion\Policies
+HKCU\Software\Microsoft\Windows\CurrentVersion\Policies
+```
+
+---
+
+## 🔹 How attackers abuse the registry
+
+* Add malicious executables to **Run keys**
+* Create fake services
+* Modify policy keys to disable security
+* Hijack file associations
+* Abuse COM objects for stealth persistence
+
+---
+
+## 🔹 Common high-risk registry indicators
+
+* Executables pointing to:
+
+  * `AppData`
+  * `Temp`
+  * User-writable directories
+* Random or system-like names
+* Recently modified keys without software installation
+
+---
+
+## 🔹 Sample logs
+
+### Windows Security Log
+
+**Event ID 4657 – Registry value modified**
+
+```
+A registry value was modified
+Object Name: HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Updater
+New Value: C:\Users\user\AppData\malware.exe
+```
+
+### System Log (Service creation)
+
+**Event ID 7045**
+
+```
+A service was installed in the system
+Service Name: WinUpdateHelper
+```
+
+---
+
+## 🔹 What looks suspicious (SOC signals)
+
+* New Run keys created recently
+* Services pointing to user directories
+* Registry changes outside maintenance windows
+* Policy keys modified to weaken security
+* Registry persistence without matching files on disk
+
+---
+
+## 🔹 3rd-party applications SOC uses
+
+* **Sysinternals Autoruns** (best registry persistence view)
+* **EDR platforms** (registry modification detection)
+* **OSQuery**
+* **SIEM** (Event ID correlation)
+
+---
+
+## 🧠 SOC Mindset
+
+If a system re-infects after reboot:
+➡️ **Check the registry first**
+
+Registry-based persistence is:
+
+* Silent
+* Reliable
+* Extremely common
+
+Understanding registry paths alone can solve **50% of endpoint investigations**.
+
