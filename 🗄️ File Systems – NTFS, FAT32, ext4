@@ -1,0 +1,273 @@
+# 🗄️ File Systems – NTFS, FAT32, ext4 (SOC View)
+
+---
+
+## 🔹 What
+
+A file system defines:
+
+* How data is stored on disk
+* How files are named, accessed, and protected
+* How permissions, timestamps, and metadata are handled
+
+Common file systems:
+
+* **NTFS** → Windows internal disks
+* **FAT32** → USB drives, removable media
+* **ext4** → Linux systems
+
+Each file system affects **security visibility**, **forensics**, and **attack techniques**.
+
+---
+
+## 📍 Where to check
+
+* Local disks (endpoints, servers)
+* External storage (USB, portable drives)
+* Cloud VM disks
+* Network-mounted volumes
+
+---
+
+## 🔍 How to check
+
+### Windows
+
+```cmd
+fsutil fsinfo volumeinfo C:
+```
+
+```cmd
+wmic logicaldisk get name,filesystem
+```
+
+### Linux
+
+```bash
+df -T
+lsblk -f
+```
+
+---
+
+## ❓ Why SOC checks file systems
+
+* Determines whether **permissions and auditing exist**
+* Identifies **high-risk storage** (USB, temp paths)
+* Impacts **malware persistence and hiding techniques**
+* Guides **forensic investigation methods**
+
+---
+
+## 🪟 NTFS (Windows)
+
+### What it provides
+
+* File and folder permissions (ACLs)
+* File ownership
+* Auditing
+* Timestamps
+* Alternate Data Streams (ADS)
+
+---
+
+### Common paths SOC checks
+
+```
+C:\Windows\System32\
+C:\Users\<user>\AppData\
+C:\ProgramData\
+```
+
+---
+
+### Why attackers abuse NTFS
+
+* Hide payloads in **Alternate Data Streams**
+* Abuse weak permissions
+* Modify timestamps (timestomping)
+
+---
+
+### How SOC checks NTFS activity
+
+```cmd
+icacls file.exe
+```
+
+```cmd
+dir /R
+```
+
+---
+
+### Sample log (Windows)
+
+**Security Event ID 4663**
+
+```
+An attempt was made to access an object
+Object Name: C:\Users\user\AppData\malware.exe
+Access Mask: WriteData
+```
+
+---
+
+### 3rd-party tools
+
+* Sysinternals (Streams, Autoruns)
+* EDR platforms
+* OSQuery
+
+---
+
+## 💾 FAT32 (Removable Media)
+
+### What it provides
+
+* Basic file storage
+* No permissions
+* No auditing
+* No ownership
+
+---
+
+### Where SOC sees FAT32
+
+* USB drives
+* External disks
+* Bootable media
+
+---
+
+### Why SOC checks FAT32
+
+* Common malware delivery method
+* No access control or logging
+* Easy data exfiltration
+
+---
+
+### How SOC checks FAT32
+
+```cmd
+diskpart
+list volume
+```
+
+---
+
+### Common risky paths
+
+```
+E:\
+F:\
+G:\
+```
+
+---
+
+### Sample log
+
+**Windows Event ID 4663 (limited visibility)**
+
+```
+Object accessed: E:\suspicious.exe
+```
+
+---
+
+### 3rd-party tools
+
+* USB control tools
+* EDR removable media monitoring
+
+---
+
+## 🐧 ext4 (Linux)
+
+### What it provides
+
+* Strong permissions
+* Journaling
+* File ownership
+* Inode-based structure
+
+---
+
+### Common paths SOC checks
+
+```
+/etc/
+/var/log/
+/tmp/
+/home/
+/usr/bin/
+```
+
+---
+
+### Why attackers abuse ext4
+
+* Drop payloads in `/tmp`
+* Modify binaries in `/usr/bin`
+* Hide persistence via cron and services
+
+---
+
+### How SOC checks ext4
+
+```bash
+ls -l
+stat file
+```
+
+---
+
+### Sample log
+
+```
+/var/log/auth.log
+sudo: user added to sudoers
+```
+
+---
+
+### 3rd-party tools
+
+* Auditd
+* Falco
+* OSQuery
+
+---
+
+## 🧠 SOC Investigation Signals
+
+* Executables in user-writable paths
+* Files created shortly before alert
+* Executables on removable media
+* Hidden streams or unusual permissions
+* Timestamp anomalies
+
+---
+
+## 🔁 High-Risk vs Low-Risk Storage (SOC View)
+
+| Storage           | Risk      |
+| ----------------- | --------- |
+| NTFS system paths | Medium    |
+| NTFS user paths   | High      |
+| FAT32 USB         | Very High |
+| ext4 `/tmp`       | High      |
+
+---
+
+## 🧠 SOC Mindset
+
+File systems tell the story:
+
+* **Where malware lives**
+* **How it persists**
+* **What it can hide**
+
+If you understand the file system, you can trace almost any attack backward.
